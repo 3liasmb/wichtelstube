@@ -59,3 +59,12 @@ test('Download-Funktion für iOS unverändert', () => {
   assert.ok(read('app.js').includes("function download(name, data, mime) { let blob = new Blob([data], { type: mime }), url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500); }"));
   assert.ok(read('app.js').includes("'application/octet-stream'"));
 });
+
+test('Dekoration: nie im Druck, nicht anklickbar, bei reduzierter Bewegung aus, pausiert im Hintergrund', () => {
+  const css = read('app.css'), js = read('app.js'), html = read('index.html');
+  assert.match(css, /@media print\{[^}]*\.deco,\.sky\{display:none!important\}/);
+  assert.match(css, /\.deco\{pointer-events:none/);
+  assert.match(css, /body\.bg-hidden \.deco,body\.bg-hidden \.deco \*\{animation-play-state:paused!important\}/);
+  assert.match(js, /function scheduleSleigh[\s\S]*?if \(reduceMotion\(\)\) return;/);
+  assert.match(html, /class="sky deco" aria-hidden="true"/);
+});

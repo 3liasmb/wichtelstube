@@ -1,6 +1,6 @@
 /* Die Wichtelstube – Service Worker.
    VERSION bei jeder Änderung erhöhen (und in index.html bei ?v= angleichen) – dann holen installierte Apps die neue Fassung. */
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const CACHE = 'wichtelstube-' + VERSION;
 const ASSETS = [
   './', './index.html', './manifest.webmanifest',
