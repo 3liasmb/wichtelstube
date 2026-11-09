@@ -503,10 +503,10 @@
     const ps = W.participants(db, c), remaining = ps.filter(p => !c.drawn.includes(p.id));
     const pick = remaining.length ? `<div class="pick"><label for="turnSelect">Jemand fehlt?</label>
             <select id="turnSelect">${remaining.map(q => `<option value="${esc(q.id)}" ${q.id === st.turnId || (!st.turnId && q === remaining[0]) ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select></div>` : '';
-    const bar = `<div class="classroom-bar"><span class="cls">Klasse ${esc(c.name)}</span>
+    const bar = `<div class="classroom-bar"><span class="cls" title="Klasse ${esc(c.name)}">Klasse ${esc(c.name)}</span>
       <div class="progress"><div class="progress-track" role="progressbar" aria-label="Fortschritt der Ziehung" aria-valuemin="0" aria-valuemax="${ps.length}" aria-valuenow="${c.drawn.length}"><div class="progress-fill" id="progFill"></div></div>
       <small id="progText">${c.drawn.length} von ${ps.length} haben gezogen</small></div>
-      ${pick}<button class="btn ghost small" type="button" id="leaveBtn" data-action="leave-classroom">${icon('exit')} Klassenmodus beenden</button></div>`;
+      ${pick}<button class="btn ghost small" type="button" id="leaveBtn" data-action="leave-classroom" aria-label="Klassenmodus beenden">${icon('exit')} <span class="lbl-long">Klassenmodus beenden</span><span class="lbl-short">Beenden</span></button></div>`;
     if (!remaining.length) return `<h1 class="visually-hidden">Glücksrad – Klasse ${esc(c.name)}</h1>${bar}
       <div class="card done-card">${icon('star', '')}<h2>Alle haben gezogen!</h2><p class="lead">Jetzt heißt es: Geschenke besorgen – und das Geheimnis gut bewahren.</p>
       <button class="btn" type="button" data-action="leave-classroom-done">Zur Lehrkraft-Ansicht</button></div>`;
@@ -518,7 +518,7 @@
         <div class="turn-head">
           <p class="now">Jetzt ist dran</p>
           <p class="who" id="turnName">${esc(p.name)}</p>
-          <p class="instr" id="turnInstr">Komm nach vorne und dreh das Glücksrad. Dein eigener Name ist nicht dabei.</p>
+          <p class="instr" id="turnInstr">Komm nach vorne und dreh das Glücksrad.<span class="instr-extra"> Dein eigener Name ist nicht dabei.</span></p>
         </div>
         <div class="wheel-wrap" id="wheelWrap">${POINTER}
           <canvas id="wheel" role="img" aria-label="Glücksrad mit ${plural(n, 'Name', 'Namen')}"></canvas>
@@ -536,21 +536,28 @@
     drawWheel(c, st.angle, 0);
   }
   /* Rad so groß wie möglich: Breite der Bühne und verfügbare Bildschirmhöhe ausnutzen. */
+  // Desktop (Maus, breites Fenster): Rad bewusst auf 420–480 px begrenzt, damit Name, Rad und Taste eine Einheit bilden.
+  // Smartphones und Tablets (Touch) behalten die volle, am Platz orientierte Größe.
+  const DESKTOP_MQ = '(hover: hover) and (pointer: fine) and (min-width: 900px)';
+  const desktopWheelMax = () => Math.round(Math.min(480, Math.max(420, window.innerWidth * 0.25)));
   function sizeWheel() {
     const wrap = $('wheelWrap'), stage = $('stage');
     if (!wrap || !stage) return;
     const side = window.matchMedia('(orientation: landscape) and (max-height: 600px)').matches;
+    const desktop = window.matchMedia(DESKTOP_MQ).matches;
     const vh = window.innerHeight, docTop = el => el.getBoundingClientRect().top + window.scrollY;
     let maxW, avail;
     if (side) {
       maxW = stage.clientWidth * 0.6;
       avail = vh - docTop(stage) - 12;
     } else {
+      // Höhe unabhängig von der aktuellen Radposition berechnen (Bühne kann auf dem Desktop vertikal zentriert sein).
       maxW = stage.clientWidth;
-      const row = $('spinRow');
-      avail = vh - docTop(wrap) - (row ? row.offsetHeight : 60) - 28;
+      const row = $('spinRow'), head = stage.querySelector('.turn-head');
+      avail = vh - docTop(stage) - (head ? head.offsetHeight : 120) - (row ? row.offsetHeight : 60) - 28;
     }
-    const size = Math.round(Math.max(240, Math.min(maxW, avail / 1.04, 1000)));
+    let size = Math.round(Math.max(200, Math.min(maxW, avail / 1.04, 1000)));
+    if (desktop && !side) size = Math.min(size, desktopWheelMax());
     wrap.style.width = size + 'px';
     wrap.style.marginTop = Math.round(size * (side ? 0.04 : 0.035)) + 'px';
     sizeCanvas();

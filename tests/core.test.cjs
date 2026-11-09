@@ -202,3 +202,12 @@ test('Druckseiten: Vereinbarungen paarweise (1, 5, 15, 30 → 1, 3, 8, 15 Seiten
     assert.equal(ch.flat().length, n);
   }
 });
+
+test('CSV: Sonderzeichen aus vielen Sprachen bleiben erhalten (UTF-8 mit BOM)', () => {
+  const names = ['Dörte „Dodo“ Ölmann', 'Fatma Şahin', 'Grzegorz Brzęczyszczykiewicz', 'Chloé', 'Ærøskøbing', 'Łukasz', 'Ñandú', 'Straße'];
+  const csv = C.buildCSV([['Name'], ...names.map(n => [n])]);
+  assert.ok(csv.startsWith('﻿'));
+  const back = Buffer.from(csv, 'utf8').toString('utf8');
+  for (const n of names) assert.ok(back.includes(n.replace(/"/g, '""')), n);
+  assert.equal(C.safeFileName('6ä Größe/Ü'), '6ä_Größe_Ü');
+});

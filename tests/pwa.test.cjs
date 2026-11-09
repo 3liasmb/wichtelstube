@@ -83,3 +83,22 @@ test('Druck: zwei Vereinbarungen passen rechnerisch auf A4, schwarz/grau, keine 
   const js = read('app.js');
   assert.match(js, /fitsHeight\(`<div class="half">\$\{page\}<\/div>`, '', 129\)/);
 });
+
+test('Zeichensatz: alle App-Dateien gültiges UTF-8 ohne BOM, ohne verstümmelte Umlaute; meta charset früh', () => {
+  for (const f of ['index.html', 'app.css', 'app.js', 'core.js', 'sw.js', 'manifest.webmanifest']) {
+    const buf = fs.readFileSync(path.join(root, f));
+    assert.ok(!(buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf), f + ' hat BOM');
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(buf);
+    for (const bad of ['Ã¤', 'Ã¶', 'Ã¼', 'ÃŸ', 'â€', '�']) assert.ok(!text.includes(bad), f + ' enthält ' + JSON.stringify(bad));
+  }
+  const html = read('index.html');
+  const pos = html.indexOf('<meta charset="utf-8">');
+  assert.ok(pos >= 0 && pos < 1024, 'meta charset fehlt oder zu spät');
+});
+
+test('Glücksrad: auf dem Desktop auf 420–480 px begrenzt, Touch-Geräte unverändert', () => {
+  const js = read('app.js');
+  assert.match(js, /const DESKTOP_MQ = '\(hover: hover\) and \(pointer: fine\) and \(min-width: 900px\)'/);
+  assert.match(js, /Math\.min\(480, Math\.max\(420, window\.innerWidth \* 0\.25\)\)/);
+  assert.match(js, /if \(desktop && !side\) size = Math\.min\(size, desktopWheelMax\(\)\)/);
+});
