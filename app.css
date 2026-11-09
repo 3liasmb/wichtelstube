@@ -38,7 +38,7 @@ main:focus,h1:focus{outline:none}
 .brand-text strong{display:block;overflow-wrap:anywhere;font-family:var(--serif);font-size:clamp(1.3rem,3.6vw,1.75rem);letter-spacing:.01em;line-height:1.1}
 .brand-text small{display:block;color:#cfe0d4;font-size:.85rem}
 .site-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.head-btn,.save-state{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:8px 13px;border-radius:999px;border:1px solid #ffffff40;background:transparent;color:#fdf7ea;font:600 .9rem var(--sans);cursor:pointer}
+.head-btn,.save-state{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:44px;padding:8px 13px;border-radius:999px;border:1px solid #ffffff40;background:transparent;color:#fdf7ea;font:600 .9rem var(--sans);cursor:pointer}
 .head-btn:hover,.save-state:hover{background:#ffffff14}
 .head-btn:focus-visible,.save-state:focus-visible{outline-color:var(--gold-2)}
 .save-state::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--gold-2);box-shadow:0 0 0 3px #ffffff18}
@@ -208,6 +208,33 @@ td .check{padding:0}
 .wheel-wrap{position:relative;width:min(100%,560px);aspect-ratio:1;margin:18px auto 0;flex:0 0 auto}
 .spin-row{display:flex;justify-content:center;padding-top:14px;min-height:72px}
 .spin-row .btn{min-width:min(100%,320px)}
+#leaveBtn{white-space:nowrap;flex:0 0 auto}
+.tag-card .for:focus{outline:none}
+.lbl-short{display:none}
+/* Schmale Smartphones: kompakte Lehrkraft-Leiste (Klasse + Beenden, darunter Fortschritt und Auswahl) */
+@media (max-width:560px){
+  .classroom-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;align-items:center}
+  .classroom-bar .cls{grid-column:1;grid-row:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .classroom-bar #leaveBtn{grid-column:2;grid-row:1}
+  .classroom-bar .progress{grid-column:1/-1;grid-row:2;max-width:none}
+  .classroom-bar .pick{grid-column:1/-1;grid-row:3;flex-wrap:nowrap;justify-content:flex-start}
+  .classroom-bar .pick select{flex:1;min-width:0;max-width:none}
+}
+@media (max-width:560px),(orientation:landscape) and (max-height:600px){
+  .lbl-long{display:none}
+  .lbl-short{display:inline}
+}
+/* Sehr kleine oder flache Bildschirme: Name etwas kleiner, nur die Kernanweisung */
+@media (max-width:379px),(max-height:700px){
+  .turn-head .who{font-size:clamp(1.45rem,min(7vw,6vh),2rem)}
+  .instr-extra{display:none}
+}
+/* Desktop: Name, Rad und Taste als kompakte Einheit, vertikal mittig im Fenster */
+@media (hover:hover) and (pointer:fine) and (min-width:900px) and (min-height:601px){
+  body.classroom main{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+  body.classroom .stage{flex:1 0 auto;justify-content:center;padding-bottom:4vh}
+  .spin-row{min-height:0;padding-top:18px}
+}
 .wheel-wrap canvas{width:100%;height:100%;display:block}
 .pointer{position:absolute;left:50%;top:-4%;width:13%;height:auto;transform:translateX(-50%);transform-origin:50% 22%;z-index:2;filter:drop-shadow(0 2px 1px #0000002e)}
 .pointer.tick{animation:tick .13s ease-out}
@@ -284,12 +311,14 @@ details.preview summary{cursor:pointer;font-weight:650;color:var(--pine-2);min-h
   .turn-head{grid-area:head;align-self:end}
   .spin-row{grid-area:act;align-self:start;min-height:0}
   .wheel-wrap{grid-area:wheel;margin-top:0}
-  .turn-head .who{font-size:1.9rem}
+  .turn-head .who{font-size:clamp(1.3rem,6vh,1.9rem)}
+  .turn-head .instr{font-size:.92rem}
   .classroom-bar{margin-bottom:6px;flex-wrap:nowrap}
   .classroom-bar .cls{display:none}
   .classroom-bar .progress{max-width:220px}
   .classroom-bar .pick select{min-width:110px;max-width:170px}
-  .tag-card{padding:22px 14px 14px}
+  .reveal{position:fixed;inset:0;border-radius:0;background:#f6efe0f2;z-index:50}
+  .tag-card{width:min(90vw,440px);padding:22px 14px 14px}
   .tag-card::after{display:none}
   .tag-card .name{font-size:1.8rem}
   .site{padding-top:8px}
