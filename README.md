@@ -12,7 +12,7 @@ Live: https://3liasmb.github.io/wichtelstube/
 | `core.js` | Kernlogik ohne Oberfläche: Auslosung, Klassenpflege, Archiv, CSV, Prüfung und Verschlüsselung der Sicherungen |
 | `app.js` | Oberfläche: Klassen, Klassenmodus mit Glücksrad, Protokoll mit Abgabe-Check, Druck, Sicherung |
 | `sw.js` | Service Worker (Offline-Betrieb, Aktualisierung) |
-| `tests/` | Automatisierte Tests (Node.js, ohne zusätzliche Pakete) |
+| `tests/` | Automatisierte Tests – nur im Branch `weihnachtsdesign` |
 
 ## Lokal ansehen
 
@@ -23,7 +23,10 @@ Dann im Browser `http://127.0.0.1:8137/` öffnen. Verschlüsselung und Offline-M
 
 ## Tests
 
+Die automatisierten Tests liegen bewusst nicht auf `main` (GitHub Pages würde sie mit veröffentlichen), sondern im Branch `weihnachtsdesign`:
+
 ```
+git switch weihnachtsdesign
 node --test tests/*.test.cjs
 ```
 Prüft u. a. die Auslosung (2–40 Teilnehmende), Klassenweiterführung, Archiv, CSV, Öffnen alter Sicherungen (Format v1, mit dem Originalcode erzeugt: `tests/fixtures/`), neue Sicherungen (v2), beschädigte und manipulierte Dateien sowie PWA-Versionierung, iOS-Dateiauswahl und AirPrint-Regeln.
@@ -31,7 +34,7 @@ Prüft u. a. die Auslosung (2–40 Teilnehmende), Klassenweiterführung, Archiv,
 ## Neue Version veröffentlichen
 
 1. `VERSION` in `sw.js` erhöhen und in `index.html` alle `?v=` auf denselben Wert setzen (der Test prüft das).
-2. Tests ausführen.
+2. Tests im Branch `weihnachtsdesign` ausführen.
 3. Nach `main` übertragen – GitHub Pages veröffentlicht automatisch. Installierte Apps laden die neue Fassung beim nächsten Öffnen und zeigen einen Hinweis „Neu laden“.
 
 ## Sicherungsformat
