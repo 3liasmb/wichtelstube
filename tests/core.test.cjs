@@ -194,3 +194,11 @@ test('Sicherung: Namen mit Sonderzeichen bleiben unverändert erhalten', () => {
   const n = C.normalizeBackup(d);
   assert.equal(n.classes[0].students[0].name, '<script>"x"</script> & ß');
 });
+
+test('Druckseiten: Vereinbarungen paarweise (1, 5, 15, 30 → 1, 3, 8, 15 Seiten)', () => {
+  for (const [n, pages] of [[1, 1], [5, 3], [15, 8], [30, 15], [2, 1]]) {
+    const ch = C.chunk(Array(n).fill('x'), 2);
+    assert.equal(ch.length, pages, 'n=' + n);
+    assert.equal(ch.flat().length, n);
+  }
+});

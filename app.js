@@ -412,10 +412,21 @@
     return `<svg class="horizon-print" aria-hidden="true"><use href="#horizon"/></svg><h1>${esc(title)}</h1>
       <p class="meta"><strong>Klasse:</strong> ${esc(c.name)} &nbsp;·&nbsp; <strong>Lehrkraft:</strong> ${esc(db.teacher)}</p>`;
   }
+  // pages: HTML-Text (eine Seite) oder { html, cls } für besondere Bögen (z. B. zwei Vereinbarungen pro Seite)
   function printSheets(pages) {
-    $('printArea').innerHTML = pages.map(x => `<article class="sheet">${x}</article>`).join('');
+    $('printArea').innerHTML = pages.map(x => typeof x === 'string' ? `<article class="sheet">${x}</article>` : `<article class="sheet ${x.cls}">${x.html}</article>`).join('');
     printJobAt = Date.now();
     setTimeout(() => window.print(), 80);
+  }
+  // Misst unsichtbar, ob ein Bogeninhalt in die angegebene Höhe (mm) passt – dieselbe Typografie wie im Druck.
+  function fitsHeight(html, cls, maxMm) {
+    const box = document.createElement('div');
+    box.className = 'print-measure'; box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = `<article class="sheet ${cls}">${html}</article>`;
+    document.body.appendChild(box);
+    const h = box.firstElementChild.scrollHeight;
+    box.remove();
+    return h <= maxMm * 96 / 25.4;
   }
   function clearPrint() { $('printArea').innerHTML = ''; printJobAt = 0; }
   // Schutz: Wer später über das Browsermenü druckt, bekommt nie einen alten (geheimen) Ausdruck.
@@ -429,12 +440,20 @@
     const c = cur(); flushPending();
     const n = W.participants(db, c).length;
     if (!n) return toast('Bitte zuerst die Teilnehmenden eintragen.');
-    const page = `${sheetHead(c, 'Unsere Wichtelvereinbarung')}${rulesHTML(c)}
-      <p>Ich habe die Regeln verstanden und mache mit.</p>
-      <p><strong>Mein Name:</strong></p><div class="line"></div>
-      <div class="secret"><p><strong>Mein geheimes Wichtelkind:</strong></p><div class="line"></div><p><em>Pssst! Bitte nicht weitererzählen.</em></p></div>
-      <div class="sign">Datum und Unterschrift</div>`;
-    printSheets(Array(n).fill(page));
+    const page = `<svg class="horizon-print" aria-hidden="true"><use href="#horizon"/></svg>
+      <div class="c-head"><h1>Unsere Wichtelvereinbarung</h1><p class="meta"><strong>Klasse:</strong> ${esc(c.name)} &nbsp;·&nbsp; <strong>Lehrkraft:</strong> ${esc(db.teacher)}</p></div>
+      ${rulesHTML(c)}
+      <div class="fill"><strong>Mein Name:</strong><span class="line"></span></div>
+      <div class="secret"><div class="fill"><strong>Mein geheimes Wichtelkind:</strong><span class="line"></span></div><p class="psst"><em>Pssst! Bitte nicht weitererzählen.</em></p></div>
+      <p class="agree">Ich habe die Regeln verstanden und mache mit.</p>
+      <div class="fill"><strong>Datum, Unterschrift:</strong><span class="line"></span></div>`;
+    // Papier sparen: zwei Vereinbarungen pro A4-Seite, wenn eine sicher auf eine halbe Seite passt (129 mm von 131 mm).
+    if (fitsHeight(`<div class="half">${page}</div>`, '', 129)) {
+      printSheets(W.chunk(Array(n).fill(page), 2).map(pair => ({ cls: 'two-up', html: pair.map(p => `<section class="half">${p}</section>`).join('') })));
+    } else {
+      const cls = fitsHeight(page, '', 268) ? '' : 'compact';
+      printSheets(Array(n).fill({ cls, html: page }));
+    }
   }
   function printLetter() {
     const c = cur(); flushPending();
@@ -453,15 +472,15 @@
       <div class="slip"><p><strong>Rückmeldung (freiwillig)</strong></p>
         <p><span class="box"></span>Mein Kind macht mit. &nbsp; <span class="box"></span>Mein Kind macht nicht mit. &nbsp; <span class="box"></span>Bitte sprechen Sie mich an.</p>
         <p>Name des Kindes: ______________________ &nbsp; Unterschrift: ______________________</p></div>`;
-    printSheets([page]);
+    printSheets([{ cls: fitsHeight(page, '', 268) ? '' : 'compact', html: page }]);
   }
   function printProtocol() {
     const c = cur(), ps = W.participants(db, c);
     if (!c.assignments) return;
     const name = id => ps.find(p => p.id === id)?.name || '—';
     printSheets([`${sheetHead(c, 'Vertrauliches Lehrerprotokoll')}
-      <table><tr><th>Wichtel</th><th>beschenkt</th><th>gezogen</th><th>Geschenk abgegeben</th></tr>
-      ${ps.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(name(c.assignments[p.id]))}</td><td>${c.drawn.includes(p.id) ? 'ja' : 'offen'}</td><td>${c.delivered.includes(p.id) ? 'ja' : ''}</td></tr>`).join('')}</table>
+      <table><thead><tr><th>Wichtel</th><th>beschenkt</th><th>gezogen</th><th>Geschenk abgegeben</th></tr></thead><tbody>
+      ${ps.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(name(c.assignments[p.id]))}</td><td>${c.drawn.includes(p.id) ? 'ja' : 'offen'}</td><td>${c.delivered.includes(p.id) ? 'ja' : ''}</td></tr>`).join('')}</tbody></table>
       <p class="foot">Vertraulich – nur für die Lehrkraft. Nach Abschluss der Aktion sicher vernichten. Erstellt am ${esc(new Date().toLocaleDateString('de-DE'))}.</p>`]);
   }
 

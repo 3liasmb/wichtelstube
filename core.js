@@ -130,6 +130,13 @@
     return { id: uid(), name, year: schoolYear(), history: [], students: [], teacherJoins: false, budget: '10', budgetAlt: true, deadline: '', handover: 'Bei der Lehrkraft abgeben', extra: '', assignments: null, drawn: [], delivered: [] };
   }
 
+  /* Liste in Gruppen fester Größe teilen (z. B. zwei Vereinbarungen pro Druckseite). */
+  function chunk(list, size) {
+    const out = [];
+    for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+    return out;
+  }
+
   /* ---------- CSV (Excel-kompatibel, Semikolon, UTF-8 mit BOM, Schutz vor Formeln) ---------- */
   function csvCell(x) {
     let s = String(x ?? '');
@@ -277,7 +284,7 @@
     ID_RE, MAX_NAME, KDF, CURRENT_VERSION, BackupError,
     esc, uid, randomInt, shuffle, createAssignments, participants, schoolYear, deletionDate, wheelColorIndices,
     parseNames, checkRoster, updateRoster, archiveRound, promoteClass, newClass,
-    csvCell, buildCSV, safeFileName, roundRows,
+    csvCell, buildCSV, safeFileName, roundRows, chunk,
     normalizeBackup, encryptData, decryptData, parseBackupText, openBackup
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

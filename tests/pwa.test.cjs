@@ -63,10 +63,23 @@ test('Download-Funktion für iOS unverändert', () => {
 test('Dekoration: nie im Druck, nicht anklickbar, bei reduzierter Bewegung aus, pausiert im Hintergrund', () => {
   const css = read('app.css'), js = read('app.js'), html = read('index.html');
   const printStart = css.indexOf('@media print{');
-  const decoRule = css.indexOf('.deco,.sky{display:none!important}');
+  const decoRule = css.indexOf('.deco,.sky,.print-measure{display:none!important}');
   assert.ok(printStart > 0 && decoRule > printStart && css.lastIndexOf('}', decoRule) > printStart, 'Deko im Druck nicht ausgeblendet');
   assert.match(css, /\.deco\{pointer-events:none/);
   assert.match(css, /body\.bg-hidden \.deco,body\.bg-hidden \.deco \*\{animation-play-state:paused!important\}/);
   assert.match(js, /function scheduleSleigh[\s\S]*?if \(reduceMotion\(\)\) return;/);
   assert.match(html, /class="sky deco" aria-hidden="true"/);
+});
+
+test('Druck: zwei Vereinbarungen passen rechnerisch auf A4, schwarz/grau, keine Farbakzente', () => {
+  const css = read('app.css');
+  const half1 = +/\.sheet\.two-up \.half\{height:(\d+)mm/.exec(css)[1];
+  const half2 = +/\.sheet\.two-up \.half \+ \.half\{height:(\d+)mm/.exec(css)[1];
+  assert.ok(half1 + half2 <= 273 - 4, `Halbseiten ${half1}+${half2} mm passen nicht sicher in 273 mm`);
+  const printPart = css.slice(css.indexOf('/* ---------- Druck'));
+  assert.ok(!/#183d32|#a6413d|#a3372f|var\(--(pine|red|gold)/.test(printPart), 'Farbakzente im Druck gefunden');
+  assert.match(css, /\.sheet:last-child\{page-break-after:auto;break-after:auto\}/);
+  assert.match(css, /\.sheet thead\{display:table-header-group\}/);
+  const js = read('app.js');
+  assert.match(js, /fitsHeight\(`<div class="half">\$\{page\}<\/div>`, '', 129\)/);
 });

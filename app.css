@@ -299,40 +299,70 @@ details.preview summary{cursor:pointer;font-weight:650;color:var(--pine-2);min-h
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
 
-/* ---------- Druck ---------- */
+/* ---------- Druck (weiß, schwarz, tintensparend) ---------- */
 .printonly{display:none}
-.sheet .horizon-print{width:100%;height:26px;display:block;margin-bottom:6mm}
 @page{size:A4;margin:12mm}
+/* Bogen-Typografie gilt auch für die unsichtbare Vorab-Messung (186 mm = A4 minus Ränder) */
+.sheet{font-family:var(--serif);color:#111;font-size:11.5pt;line-height:1.45;width:186mm;box-sizing:border-box}
+.sheet h1{color:#111;font-size:18pt;line-height:1.2;margin:0 0 1.5mm}
+.sheet .meta{margin:0 0 3mm;font-size:10.5pt}
+.sheet p{margin:0 0 2.2mm}
+.sheet ul{padding-left:5.5mm;margin:0 0 3mm}
+.sheet li{margin-bottom:.9mm}
+.sheet .secret{border:1.5px dashed #666;padding:3mm 4mm;margin-top:4mm}
+.sheet .secret p:last-child{margin-bottom:0}
+.sheet .line{border-bottom:1px solid #666;height:9mm;margin-bottom:2mm}
+.sheet .slip{border:1px dashed #666;padding:3mm 4mm;margin-top:5mm}
+.sheet .slip p:last-child{margin-bottom:0}
+.sheet .box{display:inline-block;width:4mm;height:4mm;border:1px solid #333;vertical-align:-.6mm;margin-right:2mm}
+.sheet .sign{margin-top:10mm;border-top:1px solid #666;padding-top:1.5mm;width:65%;font-size:10pt}
+.sheet .horizon-print{width:100%;height:18px;display:block;margin-bottom:3mm;fill:none;stroke:#888;stroke-width:1}
+.sheet table{width:100%;border-collapse:collapse;font-size:10pt;line-height:1.3}
+.sheet thead{display:table-header-group}
+.sheet tr{break-inside:avoid;page-break-inside:avoid}
+.sheet th{font-size:8.5pt;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid #333}
+.sheet th,.sheet td{padding:1.4mm 2mm;text-align:left;border-bottom:1px solid #bbb}
+.sheet .foot{margin-top:4mm;font-size:8.5pt;color:#444}
+.sheet.compact{font-size:10pt;line-height:1.35}
+/* Vereinbarung: Beschriftung und Schreiblinie in einer Zeile (Linie volle Restbreite, 8–9 mm hoch) */
+.sheet .c-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;column-gap:6mm;margin-bottom:2.5mm}
+.sheet .c-head h1{margin:0}
+.sheet .c-head .meta{margin:0}
+.sheet .fill{display:flex;align-items:flex-end;gap:3mm;margin-top:4mm}
+.sheet .fill strong{white-space:nowrap}
+.sheet .fill .line{flex:1;height:9mm;margin:0}
+.sheet .secret .fill{margin-top:0}
+.sheet .secret .psst{margin:1.5mm 0 0;font-size:.9em}
+.sheet .agree{margin:4mm 0 0}
+/* Zwei Vereinbarungen pro Seite: 131 mm + 136 mm = 267 mm (< 273 mm Druckhöhe), mit Schnittlinie */
+.half{font-size:10.5pt;line-height:1.36}
+.half h1{font-size:15pt}
+.half .horizon-print{height:12px;margin-bottom:1.5mm}
+.half ul{margin-bottom:1mm}
+.half li{margin-bottom:.4mm}
+.half .fill{margin-top:3mm}
+.half .fill .line{height:8mm}
+.half .secret{margin-top:3mm;padding:2.5mm 4mm}
+.half .agree{margin-top:3mm}
+.sheet.two-up .half{height:131mm;overflow:hidden}
+.sheet.two-up .half + .half{height:136mm;padding-top:5mm;border-top:1px dashed #999}
+.print-measure{position:absolute;left:-10000px;top:0;visibility:hidden;pointer-events:none}
 @media print{
-  body{background:#fff}
-  .site,main,.toast,.modal-backdrop,.update-banner,noscript,.deco,.sky{display:none!important}
+  html,body{background:#fff;margin:0;min-height:0}
+  .site,main,.toast,.modal-backdrop,.update-banner,noscript,.deco,.sky,.print-measure{display:none!important}
   .printonly{display:block!important}
-  .sheet{page-break-after:always;break-after:page;font-family:var(--serif);color:#222;font-size:12pt;line-height:1.5}
+  .sheet{width:auto;page-break-after:always;break-after:page}
   .sheet:last-child{page-break-after:auto;break-after:auto}
-  .sheet h1{color:#183d32;font-size:22pt;margin:0 0 4mm}
-  .sheet h2{font-size:15pt;margin:5mm 0 2mm}
-  .sheet .meta{margin-bottom:4mm}
-  .sheet ul{padding-left:6mm}
-  .sheet li{margin-bottom:1.5mm}
-  .sheet .secret{border:2px dashed #a6413d;padding:4mm 5mm;margin-top:6mm}
-  .sheet .line{border-bottom:1px solid #555;height:9mm;margin-bottom:3mm}
-  .sheet .slip{border:1px dashed #555;padding:4mm 5mm;margin-top:8mm}
-  .sheet .box{display:inline-block;width:4mm;height:4mm;border:1px solid #333;vertical-align:-.6mm;margin-right:2mm}
-  .sheet .sign{margin-top:14mm;border-top:1px solid #555;padding-top:2mm;width:65%}
-  .sheet table{font-size:11pt}
-  .sheet th,.sheet td{padding:2mm 2.5mm}
-  .sheet .foot{margin-top:8mm;font-size:9pt;color:#555}
-  .sheet .horizon-print{fill:none;stroke:#444;stroke-width:1.1}
 }
 
-/* iOS/AirPrint: Druckdokumente dürfen keinen Hintergrund aus dem Dunkelmodus übernehmen. (unverändert übernommen) */
+/* iOS/AirPrint: Druckdokumente dürfen keinen Hintergrund aus dem Dunkelmodus übernehmen. (übernommen; Akzentfarben seit 2.1.0 schwarz/grau) */
 @media print{
   :root{color-scheme:light!important}
   html,body,#printArea,#printArea .sheet,#printArea .sheet *{background:#fff!important;background-color:#fff!important;color:#111!important;box-shadow:none!important;text-shadow:none!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   #printArea .sheet{padding:0!important;overflow:visible!important}
-  #printArea .sheet h1{color:#183d32!important}
+  #printArea .sheet h1{color:#111!important}
   #printArea .sheet table{width:100%!important;border-collapse:collapse!important}
   #printArea .sheet th,#printArea .sheet td{color:#111!important;background:#fff!important;border-bottom:1px solid #777!important;overflow-wrap:anywhere}
-  #printArea .sheet .secret{border:2px dashed #a6413d!important}
-  #printArea .sheet .sign{border-top:1px solid #555!important}
+  #printArea .sheet .secret{border:1.5px dashed #666!important}
+  #printArea .sheet .sign{border-top:1px solid #666!important}
 }
