@@ -152,6 +152,7 @@
     const c = cur();
     if (['class', 'protocol', 'archive', 'wheel'].includes(st.screen) && !c) st.screen = 'home';
     document.body.classList.toggle('classroom', st.screen === 'wheel');
+    document.body.classList.toggle('on-home', st.screen === 'home');
     let html;
     switch (st.screen) {
       case 'class': html = classPage(c); break;
@@ -163,13 +164,76 @@
     }
     $('app').innerHTML = html;
     updateSaveState();
+    if (st.screen !== 'home') $('sleigh')?.classList.remove('fly');
     if (st.screen === 'wheel') setupWheel(c);
   }
 
+  /* ---------- Dekoration (nur Startseite, rein visuell, aria-hidden) ---------- */
+  function elf(cls) {
+    return `<g class="elf ${cls}">
+      <path d="M-9-3Q-10-13 0-14Q10-13 9-3Z" fill="#245442"/>
+      <path d="M-7.5-19L-13-22.5L-7.5-14.5ZM7.5-19L13-22.5L7.5-14.5Z" fill="#f6dcc0"/>
+      <circle cx="0" cy="-17" r="8" fill="#f6dcc0"/>
+      <circle cx="-3" cy="-18" r="1.15" fill="#1d3128"/><circle cx="3" cy="-18" r="1.15" fill="#1d3128"/>
+      <circle cx="-5.2" cy="-14.6" r="1.6" fill="#eba79b"/><circle cx="5.2" cy="-14.6" r="1.6" fill="#eba79b"/>
+      <path d="M-2.4-13.3Q0-11 2.4-13.3" stroke="#1d3128" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <path d="M-9-22Q-2-42 12-36Q4-33 8-24Z" fill="#a3372f"/><circle cx="12" cy="-36" r="2.8" fill="#fffaf0"/>
+      <rect x="-10" y="-25" width="20" height="4.6" rx="2.3" fill="#fffaf0"/>
+      <g class="elf-hand"><path d="M8.5-6L14.5-13.5" stroke="#245442" stroke-width="3.4" stroke-linecap="round"/><circle cx="15.6" cy="-15" r="2.8" fill="#f6dcc0"/></g>
+    </g>`;
+  }
+  function fir(x, base, h, color) {
+    const r = n => Math.round(n * 10) / 10, w = h * 0.62;
+    let d = '';
+    for (let t = 0; t < 3; t++) {
+      const top = base - h + t * h * 0.24, bot = base - h * 0.12 - (2 - t) * h * 0.2, hw = w * (0.32 + t * 0.18);
+      d += `M${r(x)} ${r(top)}L${r(x + hw)} ${r(bot)}L${r(x - hw)} ${r(bot)}Z`;
+    }
+    d += `M${r(x - h * 0.05)} ${r(base - h * 0.14)}h${r(h * 0.1)}V${base}h${r(-h * 0.1)}Z`;
+    return `<path d="${d}" fill="${color}"/>`;
+  }
+  const twinkle = (x, y, z, i) => `<path class="tw tw${i}" d="M${x} ${y - z}L${x + z * 0.28} ${y - z * 0.28}L${x + z} ${y}L${x + z * 0.28} ${y + z * 0.28}L${x} ${y + z}L${x - z * 0.28} ${y + z * 0.28}L${x - z} ${y}L${x - z * 0.28} ${y - z * 0.28}Z" fill="#c49a4f"/>`;
+  function headScene() {
+    return `<svg class="scene deco" viewBox="0 0 260 120" aria-hidden="true" focusable="false">
+      ${twinkle(28, 24, 4, 0)}${twinkle(96, 12, 3, 1)}${twinkle(214, 16, 3.5, 2)}${twinkle(246, 46, 2.6, 3)}
+      <g transform="translate(72 109)">${elf('b')}</g>
+      <rect x="55" y="88" width="34" height="22" rx="2" fill="#ddb86c"/><rect x="69" y="88" width="6" height="22" fill="#a3372f"/>
+      <path d="M72 88q-9-9-12-2t12 2q9-9 12-2t-12 2z" fill="#a3372f"/>
+      <g transform="translate(163 110) scale(-1 1)">${elf('a')}</g>
+      ${fir(163, 112, 88, '#173e32')}<ellipse cx="163" cy="107" rx="26" ry="8" fill="#fffaf0"/><path d="M163 18l2.4 5 5.4.6-4 3.7 1.1 5.4-4.9-2.7-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z" fill="#ddb86c"/>
+      ${fir(222, 112, 56, '#245442')}${fir(24, 112, 48, '#245442')}
+      <path d="M0 112Q60 101 130 107T260 105V120H0Z" fill="#fffaf0" stroke="#e0d3b8"/>
+    </svg>`;
+  }
+  function footScene() {
+    return `<svg class="foot-scene deco" viewBox="0 0 400 64" aria-hidden="true" focusable="false">
+      ${fir(40, 60, 40, '#245442')}${fir(78, 60, 30, '#173e32')}
+      <path d="M150 60V40l18-14 18 14v20z" fill="#173e32"/><rect x="163" y="44" width="10" height="9" fill="#ddb86c"/>
+      ${fir(232, 60, 34, '#245442')}
+      <g transform="translate(318 60)">${elf('c')}</g>
+      ${fir(318, 60, 52, '#173e32')}${fir(360, 60, 38, '#245442')}
+      <path d="M0 60H400V64H0Z" fill="#e0d3b8"/>
+    </svg>`;
+  }
+
+  let sleighTimer;
+  function scheduleSleigh(delay) {
+    clearTimeout(sleighTimer);
+    if (reduceMotion()) return;
+    sleighTimer = setTimeout(flySleigh, delay ?? (30000 + Math.random() * 25000));
+  }
+  function flySleigh() {
+    const s = $('sleigh');
+    if (!s || document.hidden || st.screen !== 'home' || reduceMotion()) return scheduleSleigh();
+    s.classList.remove('fly'); void s.getBoundingClientRect(); s.classList.add('fly');
+    scheduleSleigh();
+  }
+  $('sleigh')?.addEventListener('animationend', e => { if (e.target.id === 'sleigh') e.target.classList.remove('fly'); });
+
   /* ---------- Start ---------- */
   function welcomePage() {
-    return `<div class="page-head"><span class="eyebrow">Willkommen</span><h1>Willkommen in der Wichtelstube</h1>
-      <p class="lead">Geheimes Klassenwichteln mit Glücksrad – ohne Konto und ohne Cloud. Alles bleibt auf diesem Gerät.</p></div>
+    return `<div class="page-head home-head"><div><span class="eyebrow">Willkommen</span><h1>Willkommen in der Wichtelstube</h1>
+      <p class="lead">Geheimes Klassenwichteln mit Glücksrad – ohne Konto und ohne Cloud. Alles bleibt auf diesem Gerät.</p></div>${headScene()}</div>
       <div class="layout-2">
         <section class="card" aria-labelledby="hWho"><h2 id="hWho"><span class="num">1</span>Wie heißt du?</h2>
           <form data-form="teacher" novalidate><div class="field"><label for="teacherName">Name der Lehrkraft</label>
@@ -180,7 +244,8 @@
           <button class="btn secondary" type="button" data-action="backup-import">${icon('up')} Sicherung öffnen</button></section>
       </div>
       <section class="card quiet" aria-labelledby="hHow"><h2 id="hHow">So funktioniert’s</h2>${howToSteps()}
-        <p class="mt"><button class="btn ghost small" type="button" data-action="info">${icon('info')} Hilfe &amp; Datenschutz</button></p></section>`;
+        <p class="mt"><button class="btn ghost small" type="button" data-action="info">${icon('info')} Hilfe &amp; Datenschutz</button></p></section>
+      ${footScene()}`;
   }
   function howToSteps() {
     return `<ol class="info-steps">
@@ -201,7 +266,7 @@
       return `<button type="button" class="class-tile" data-action="open-class" data-id="${esc(c.id)}">${icon('star', 't-star')}
         <span class="t-name">${esc(c.name)}</span><span class="t-meta">${c.year ? 'Schuljahr ' + esc(c.year) + ' · ' : ''}${plural(ps.length, 'Teilnehmer/in', 'Teilnehmende')}</span>${chip}</button>`;
     }).join('');
-    return `<div class="page-head"><span class="eyebrow">Hallo, ${esc(db.teacher)}</span><h1>Meine Klassen</h1></div>
+    return `<div class="page-head home-head"><div><span class="eyebrow">Hallo, ${esc(db.teacher)}</span><h1>Meine Klassen</h1></div>${headScene()}</div>
       ${db.classes.length ? `<div class="class-list">${tiles}</div>` : `<div class="card empty">${icon('tree', '')}<p>Noch keine Klasse angelegt.<br>Lege unten deine erste Klasse an.</p></div>`}
       <div class="card quiet"><form class="add-class" data-form="add-class" novalidate>
         <div class="field"><label for="newClass">Neue Klasse anlegen</label><input id="newClass" maxlength="60" placeholder="z. B. 5a" autocomplete="off"></div>
@@ -215,7 +280,8 @@
           <button class="btn secondary" type="button" data-action="backup-verify">${icon('check')} Sicherung prüfen</button>
           <button class="btn danger" type="button" data-action="session-end">${icon('exit')} Sitzung beenden</button>
         </div></section>
-      <div class="card quiet row"><span>Lehrkraft: <strong>${esc(db.teacher)}</strong></span><button class="btn ghost small" type="button" data-action="rename-teacher">Namen ändern</button></div>`;
+      <div class="card quiet row"><span>Lehrkraft: <strong>${esc(db.teacher)}</strong></span><button class="btn ghost small" type="button" data-action="rename-teacher">Namen ändern</button></div>
+      ${footScene()}`;
   }
 
   /* ---------- Klasse ---------- */
@@ -346,10 +412,21 @@
     return `<svg class="horizon-print" aria-hidden="true"><use href="#horizon"/></svg><h1>${esc(title)}</h1>
       <p class="meta"><strong>Klasse:</strong> ${esc(c.name)} &nbsp;·&nbsp; <strong>Lehrkraft:</strong> ${esc(db.teacher)}</p>`;
   }
+  // pages: HTML-Text (eine Seite) oder { html, cls } für besondere Bögen (z. B. zwei Vereinbarungen pro Seite)
   function printSheets(pages) {
-    $('printArea').innerHTML = pages.map(x => `<article class="sheet">${x}</article>`).join('');
+    $('printArea').innerHTML = pages.map(x => typeof x === 'string' ? `<article class="sheet">${x}</article>` : `<article class="sheet ${x.cls}">${x.html}</article>`).join('');
     printJobAt = Date.now();
     setTimeout(() => window.print(), 80);
+  }
+  // Misst unsichtbar, ob ein Bogeninhalt in die angegebene Höhe (mm) passt – dieselbe Typografie wie im Druck.
+  function fitsHeight(html, cls, maxMm) {
+    const box = document.createElement('div');
+    box.className = 'print-measure'; box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = `<article class="sheet ${cls}">${html}</article>`;
+    document.body.appendChild(box);
+    const h = box.firstElementChild.scrollHeight;
+    box.remove();
+    return h <= maxMm * 96 / 25.4;
   }
   function clearPrint() { $('printArea').innerHTML = ''; printJobAt = 0; }
   // Schutz: Wer später über das Browsermenü druckt, bekommt nie einen alten (geheimen) Ausdruck.
@@ -363,12 +440,20 @@
     const c = cur(); flushPending();
     const n = W.participants(db, c).length;
     if (!n) return toast('Bitte zuerst die Teilnehmenden eintragen.');
-    const page = `${sheetHead(c, 'Unsere Wichtelvereinbarung')}${rulesHTML(c)}
-      <p>Ich habe die Regeln verstanden und mache mit.</p>
-      <p><strong>Mein Name:</strong></p><div class="line"></div>
-      <div class="secret"><p><strong>Mein geheimes Wichtelkind:</strong></p><div class="line"></div><p><em>Pssst! Bitte nicht weitererzählen.</em></p></div>
-      <div class="sign">Datum und Unterschrift</div>`;
-    printSheets(Array(n).fill(page));
+    const page = `<svg class="horizon-print" aria-hidden="true"><use href="#horizon"/></svg>
+      <div class="c-head"><h1>Unsere Wichtelvereinbarung</h1><p class="meta"><strong>Klasse:</strong> ${esc(c.name)} &nbsp;·&nbsp; <strong>Lehrkraft:</strong> ${esc(db.teacher)}</p></div>
+      ${rulesHTML(c)}
+      <div class="fill"><strong>Mein Name:</strong><span class="line"></span></div>
+      <div class="secret"><div class="fill"><strong>Mein geheimes Wichtelkind:</strong><span class="line"></span></div><p class="psst"><em>Pssst! Bitte nicht weitererzählen.</em></p></div>
+      <p class="agree">Ich habe die Regeln verstanden und mache mit.</p>
+      <div class="fill"><strong>Datum, Unterschrift:</strong><span class="line"></span></div>`;
+    // Papier sparen: zwei Vereinbarungen pro A4-Seite, wenn eine sicher auf eine halbe Seite passt (129 mm von 131 mm).
+    if (fitsHeight(`<div class="half">${page}</div>`, '', 129)) {
+      printSheets(W.chunk(Array(n).fill(page), 2).map(pair => ({ cls: 'two-up', html: pair.map(p => `<section class="half">${p}</section>`).join('') })));
+    } else {
+      const cls = fitsHeight(page, '', 268) ? '' : 'compact';
+      printSheets(Array(n).fill({ cls, html: page }));
+    }
   }
   function printLetter() {
     const c = cur(); flushPending();
@@ -387,15 +472,15 @@
       <div class="slip"><p><strong>Rückmeldung (freiwillig)</strong></p>
         <p><span class="box"></span>Mein Kind macht mit. &nbsp; <span class="box"></span>Mein Kind macht nicht mit. &nbsp; <span class="box"></span>Bitte sprechen Sie mich an.</p>
         <p>Name des Kindes: ______________________ &nbsp; Unterschrift: ______________________</p></div>`;
-    printSheets([page]);
+    printSheets([{ cls: fitsHeight(page, '', 268) ? '' : 'compact', html: page }]);
   }
   function printProtocol() {
     const c = cur(), ps = W.participants(db, c);
     if (!c.assignments) return;
     const name = id => ps.find(p => p.id === id)?.name || '—';
     printSheets([`${sheetHead(c, 'Vertrauliches Lehrerprotokoll')}
-      <table><tr><th>Wichtel</th><th>beschenkt</th><th>gezogen</th><th>Geschenk abgegeben</th></tr>
-      ${ps.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(name(c.assignments[p.id]))}</td><td>${c.drawn.includes(p.id) ? 'ja' : 'offen'}</td><td>${c.delivered.includes(p.id) ? 'ja' : ''}</td></tr>`).join('')}</table>
+      <table><thead><tr><th>Wichtel</th><th>beschenkt</th><th>gezogen</th><th>Geschenk abgegeben</th></tr></thead><tbody>
+      ${ps.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(name(c.assignments[p.id]))}</td><td>${c.drawn.includes(p.id) ? 'ja' : 'offen'}</td><td>${c.delivered.includes(p.id) ? 'ja' : ''}</td></tr>`).join('')}</tbody></table>
       <p class="foot">Vertraulich – nur für die Lehrkraft. Nach Abschluss der Aktion sicher vernichten. Erstellt am ${esc(new Date().toLocaleDateString('de-DE'))}.</p>`]);
   }
 
@@ -416,10 +501,12 @@
   function wheelPage(c) {
     if (!c.assignments) return `<h1>Noch keine Auslosung</h1><p>Bitte zuerst die Klasse vorbereiten.</p><button class="btn" type="button" data-action="leave-classroom-done">Zur Klasse</button>`;
     const ps = W.participants(db, c), remaining = ps.filter(p => !c.drawn.includes(p.id));
+    const pick = remaining.length ? `<div class="pick"><label for="turnSelect">Jemand fehlt?</label>
+            <select id="turnSelect">${remaining.map(q => `<option value="${esc(q.id)}" ${q.id === st.turnId || (!st.turnId && q === remaining[0]) ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select></div>` : '';
     const bar = `<div class="classroom-bar"><span class="cls">Klasse ${esc(c.name)}</span>
       <div class="progress"><div class="progress-track" role="progressbar" aria-label="Fortschritt der Ziehung" aria-valuemin="0" aria-valuemax="${ps.length}" aria-valuenow="${c.drawn.length}"><div class="progress-fill" id="progFill"></div></div>
       <small id="progText">${c.drawn.length} von ${ps.length} haben gezogen</small></div>
-      <button class="btn ghost small" type="button" id="leaveBtn" data-action="leave-classroom">${icon('exit')} Klassenmodus beenden</button></div>`;
+      ${pick}<button class="btn ghost small" type="button" id="leaveBtn" data-action="leave-classroom">${icon('exit')} Klassenmodus beenden</button></div>`;
     if (!remaining.length) return `<h1 class="visually-hidden">Glücksrad – Klasse ${esc(c.name)}</h1>${bar}
       <div class="card done-card">${icon('star', '')}<h2>Alle haben gezogen!</h2><p class="lead">Jetzt heißt es: Geschenke besorgen – und das Geheimnis gut bewahren.</p>
       <button class="btn" type="button" data-action="leave-classroom-done">Zur Lehrkraft-Ansicht</button></div>`;
@@ -427,19 +514,17 @@
     const p = ps.find(x => x.id === st.turnId);
     const n = ps.length - 1;
     return `<h1 class="visually-hidden">Glücksrad – Klasse ${esc(c.name)}</h1>${bar}
-      <div class="stage">
-        <div class="turn-panel">
+      <div class="stage" id="stage">
+        <div class="turn-head">
           <p class="now">Jetzt ist dran</p>
           <p class="who" id="turnName">${esc(p.name)}</p>
-          <div class="pick"><label for="turnSelect">Jemand fehlt? Andere Person wählen:</label>
-            <select id="turnSelect">${remaining.map(q => `<option value="${esc(q.id)}" ${q.id === st.turnId ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select></div>
-          <button class="btn gold big" type="button" id="spinBtn" data-action="spin">${icon('wheel')} Glücksrad drehen</button>
-          <p class="small muted mt">Der eigene Name ist nicht auf dem Rad.</p>
+          <p class="instr" id="turnInstr">Komm nach vorne und dreh das Glücksrad. Dein eigener Name ist nicht dabei.</p>
         </div>
         <div class="wheel-wrap" id="wheelWrap">${POINTER}
           <canvas id="wheel" role="img" aria-label="Glücksrad mit ${plural(n, 'Name', 'Namen')}"></canvas>
           <div class="reveal" id="reveal" hidden></div>
         </div>
+        <div class="spin-row" id="spinRow"><button class="btn gold big" type="button" id="spinBtn" data-action="spin">${icon('wheel')} Glücksrad drehen</button></div>
       </div>`;
   }
 
@@ -447,8 +532,28 @@
     const fill = $('progFill');
     if (fill && c?.assignments) { const ps = W.participants(db, c); fill.style.width = Math.round(c.drawn.length / ps.length * 100) + '%'; }
     if (!$('wheel')) return;
-    sizeCanvas();
+    sizeWheel();
     drawWheel(c, st.angle, 0);
+  }
+  /* Rad so groß wie möglich: Breite der Bühne und verfügbare Bildschirmhöhe ausnutzen. */
+  function sizeWheel() {
+    const wrap = $('wheelWrap'), stage = $('stage');
+    if (!wrap || !stage) return;
+    const side = window.matchMedia('(orientation: landscape) and (max-height: 600px)').matches;
+    const vh = window.innerHeight, docTop = el => el.getBoundingClientRect().top + window.scrollY;
+    let maxW, avail;
+    if (side) {
+      maxW = stage.clientWidth * 0.6;
+      avail = vh - docTop(stage) - 12;
+    } else {
+      maxW = stage.clientWidth;
+      const row = $('spinRow');
+      avail = vh - docTop(wrap) - (row ? row.offsetHeight : 60) - 28;
+    }
+    const size = Math.round(Math.max(240, Math.min(maxW, avail / 1.04, 1000)));
+    wrap.style.width = size + 'px';
+    wrap.style.marginTop = Math.round(size * (side ? 0.04 : 0.035)) + 'px';
+    sizeCanvas();
   }
   function sizeCanvas() {
     const cv = $('wheel'); if (!cv) return;
@@ -459,7 +564,7 @@
   let resizeT;
   window.addEventListener('resize', () => {
     clearTimeout(resizeT);
-    resizeT = setTimeout(() => { if (st.screen === 'wheel' && $('wheel')) { sizeCanvas(); const c = cur(); if (c && !st.spinning) drawWheel(c, st.angle, 0); } }, 80);
+    resizeT = setTimeout(() => { if (st.screen === 'wheel' && $('wheel')) { sizeWheel(); const c = cur(); if (c) drawWheel(c, st.angle, 0); } }, 80);
   });
   const wheelNames = c => W.participants(db, c).filter(p => p.id !== st.turnId);
   const segAt = (rot, n) => Math.floor(((((-rot) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) / (2 * Math.PI / n)) % n;
@@ -577,6 +682,7 @@
       <button class="btn" type="button" data-action="hide-result">${icon('eye')} Verbergen &amp; weiter</button></div>`;
     r.hidden = false;
     if ($('spinBtn')) $('spinBtn').hidden = true;
+    if ($('turnInstr')) $('turnInstr').textContent = 'Lies dein Ergebnis leise – dann auf „Verbergen & weiter“ tippen.';
     if ($('leaveBtn')) $('leaveBtn').disabled = false;
     $('revealFor').focus({ preventScroll: true });
     r.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' });
@@ -927,7 +1033,10 @@
 
   window.addEventListener('beforeunload', e => { if (hasData() && !st.allowUnload) { e.preventDefault(); e.returnValue = ''; } });
   // Beim Wechsel in den Hintergrund offene Eingaben sofort übernehmen.
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPending(); });
+  document.addEventListener('visibilitychange', () => {
+    document.body.classList.toggle('bg-hidden', document.hidden);
+    if (document.hidden) flushPending();
+  });
 
   /* ---------- Aktualisierung der installierten App ---------- */
   const swAllowed = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -943,5 +1052,6 @@
 
   history.replaceState({ screen: 'home', classId: null }, '');
   render();
+  scheduleSleigh(3500);
   window.WichtelApp = { get db() { return db; }, state: st }; // für automatisierte Oberflächentests
 })();
