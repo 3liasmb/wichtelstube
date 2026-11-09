@@ -62,7 +62,9 @@ test('Download-Funktion für iOS unverändert', () => {
 
 test('Dekoration: nie im Druck, nicht anklickbar, bei reduzierter Bewegung aus, pausiert im Hintergrund', () => {
   const css = read('app.css'), js = read('app.js'), html = read('index.html');
-  assert.match(css, /@media print\{[^}]*\.deco,\.sky\{display:none!important\}/);
+  const printStart = css.indexOf('@media print{');
+  const decoRule = css.indexOf('.deco,.sky{display:none!important}');
+  assert.ok(printStart > 0 && decoRule > printStart && css.lastIndexOf('}', decoRule) > printStart, 'Deko im Druck nicht ausgeblendet');
   assert.match(css, /\.deco\{pointer-events:none/);
   assert.match(css, /body\.bg-hidden \.deco,body\.bg-hidden \.deco \*\{animation-play-state:paused!important\}/);
   assert.match(js, /function scheduleSleigh[\s\S]*?if \(reduceMotion\(\)\) return;/);
